@@ -1,7 +1,140 @@
+// import {
+//   IsAlpha,
+//   IsArray,
+//   IsEnum,
+//   IsISO8601,
+//   IsJSON,
+//   IsNotEmpty,
+//   IsOptional,
+//   IsString,
+//   IsUrl,
+//   Matches,
+//   MaxLength,
+//   MinLength,
+//   ValidateNested,
+// } from 'class-validator';
+// import { postStatus } from '../enums/postStatus.enum';
+// import { postType } from '../enums/postType.enum';
+// import { CreatePostMetaOptionsDto } from '../../meta-options/dtos/create-post-meta-options.dto';
+// import { Type } from 'class-transformer';
+// import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+// export class CreatePostDto {
+//   @ApiProperty({
+//     description:
+//       'The title of the blog post. Must be at least 4 characters long.',
+//   })
+//   @IsString()
+//   @MinLength(4)
+//   @IsNotEmpty()
+//   @MaxLength(512)
+//   title: string;
+
+//   @ApiProperty({
+//     enum: postType,
+//     description:
+//       'Type of the post. Possible values: "post", "page", "story", "series".',
+//   })
+//   @IsEnum(postType)
+//   @IsNotEmpty()
+//   postType: postType;
+
+//   @ApiProperty({
+//     description:
+//       'Unique slug for the blog post. Must be lowercase, use only hyphens (-), and have no spaces.',
+//     example: 'my-blog-post',
+//   })
+//   @IsString()
+//   @IsNotEmpty()
+//   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+//     message:
+//       'A slug should be all small letters and users only "-"  and without spaces. for example "my-url"',
+//   })
+//   @MaxLength(255)
+//   slug: string;
+
+//   @ApiProperty({
+//     enum: postStatus,
+//     description:
+//       'Status of the post. Possible values: "draft", "scheduled", "published", "review", "archived".',
+//   })
+//   @IsEnum(postStatus)
+//   @IsNotEmpty()
+//   status: postStatus;
+
+//   @ApiPropertyOptional({
+//     description: 'The content of the Blog post',
+//     example: '<h1>Hello World!</h1>',
+//   })
+//   @IsString()
+//   @IsOptional()
+//   content?: string;
+
+//   @ApiPropertyOptional({
+//     description: 'SEO metadata for the blog post in JSON format.',
+//     example:
+//       '{"title": "My Blog Post", "description": "This is a blog post about my life."}',
+//   })
+//   @IsOptional()
+//   @IsJSON()
+//   schemas?: string;
+
+//   @ApiPropertyOptional({
+//     description: 'URL of the featured image for the blog post.',
+//     example: 'https://example.com/image.jpg',
+//   })
+//   @IsOptional()
+//   @IsUrl()
+//   @MaxLength(1024)
+//   featuredImageUrl?: string;
+//   @ApiProperty({
+//     description: 'Date and time when the blog post was published.',
+//     example: '2022-01-01T12:00:00.000Z',
+//   })
+//   @IsISO8601()
+//   @IsOptional()
+//   publishedOn: Date;
+
+//   @ApiPropertyOptional({
+//     description:
+//       'Tags associated with the blog post. Each tag must be at least 3 characters long.',
+//     example: ['tech', 'nestjs', 'development'],
+//   })
+//   @IsOptional()
+//   @IsArray()
+//   @IsString({ each: true })
+//   @MinLength(3, { each: true })
+//   tags?: string[];
+
+//   @ApiPropertyOptional({
+//     type: 'object',
+//     required: false,
+//     items: {
+//       type: 'object',
+//       properties: {
+//         metaValue: {
+//           type: 'json',
+//           description: 'The meta Value is JSON string',
+//           example: '{"sidebarEnabled": true}',
+//         },
+//         value: {
+//           type: 'any',
+//           description: 'Any value that you want to save for the key.',
+//           example: true,
+//         },
+//       },
+//     },
+//   })
+//   @IsOptional()
+//   @ValidateNested({ each: true })
+//   @Type(() => CreatePostMetaOptionsDto)
+//   metaOptions?: CreatePostMetaOptionsDto | null;
+// }
+
 import {
-  IsAlpha,
   IsArray,
   IsEnum,
+  IsInt,
   IsISO8601,
   IsJSON,
   IsNotEmpty,
@@ -9,121 +142,132 @@ import {
   IsString,
   IsUrl,
   Matches,
+  MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
-import { postStatus } from '../enums/postStatus.enum';
-import { postType } from '../enums/postType.enum';
-import { CreatePostMetaOptionsDto } from './create-post-meta-options.dto';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { postType } from '../enums/postType.enum';
+import { postStatus } from '../enums/postStatus.enum';
+import { CreatePostMetaOptionsDto } from '../../meta-options/dtos/create-post-meta-options.dto';
 
 export class CreatePostDto {
   @ApiProperty({
-    description:
-      'The title of the blog post. Must be at least 4 characters long.',
+    example: 'This is a title.',
+    description: 'This is the title for the blog post.',
   })
   @IsString()
   @MinLength(4)
+  @MaxLength(520)
   @IsNotEmpty()
   title: string;
 
   @ApiProperty({
     enum: postType,
-    description:
-      'Type of the post. Possible values: "post", "page", "story", "series".',
+    description: "Possible values, 'post', 'page','story', 'series'.",
   })
   @IsEnum(postType)
   @IsNotEmpty()
   postType: postType;
 
   @ApiProperty({
-    description:
-      'Unique slug for the blog post. Must be lowercase, use only hyphens (-), and have no spaces.',
+    description: "For Example - 'my-url'",
     example: 'my-blog-post',
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(256)
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
     message:
-      'A slug should be all small letters and users only "-"  and without spaces. for example "my-url"',
+      'A slug should be  all small letters and uses only "-" and without spaces. For example "my-url"',
   })
   slug: string;
 
   @ApiProperty({
     enum: postStatus,
-    description:
-      'Status of the post. Possible values: "draft", "scheduled", "published", "review", "archived".',
+    description: "Possible values  'draft', 'scheduled', 'review', 'published'",
   })
   @IsEnum(postStatus)
   @IsNotEmpty()
   status: postStatus;
 
   @ApiPropertyOptional({
-    description: 'The content of the Blog post',
-    example: '<h1>Hello World!</h1>',
+    description: 'This is  the content of the post.',
+    example: 'Post content',
   })
   @IsString()
   @IsOptional()
   content?: string;
 
   @ApiPropertyOptional({
-    description: 'SEO metadata for the blog post in JSON format.',
+    description:
+      'Serialize your JSON object else a validation error will be thrown.',
     example:
-      '{"title": "My Blog Post", "description": "This is a blog post about my life."}',
+      '{\r\n "@context": "https://schema.org",\r\n "@type": "Person"\r\n}',
   })
   @IsOptional()
   @IsJSON()
   schemas?: string;
 
   @ApiPropertyOptional({
-    description: 'URL of the featured image for the blog post.',
-    example: 'https://example.com/image.jpg',
+    description: 'Featured image for your blog post',
+    example:
+      'https://i.ytimg.com/vi/UybXiAFPRc4/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBjw5PJytIdGcTfljgnu3UNrio2JQ',
   })
   @IsOptional()
   @IsUrl()
+  @MaxLength(1024)
   featuredImageUrl?: string;
-  @ApiProperty({
-    description: 'Date and time when the blog post was published.',
-    example: '2022-01-01T12:00:00.000Z',
+
+  @ApiPropertyOptional({
+    description: 'The date on which the blog post is published.',
+    example: '2024-03-16T07:46:32+0000',
   })
   @IsISO8601()
   @IsOptional()
-  publishedOn: Date;
+  publishedOn?: string;
 
   @ApiPropertyOptional({
-    description:
-      'Tags associated with the blog post. Each tag must be at least 3 characters long.',
-    example: ['tech', 'nestjs', 'development'],
+    description: 'Array of ids of tags.',
+    example: [1, 2],
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  @MinLength(3, { each: true })
-  tags?: string[];
+  @IsInt({ each: true })
+  tags?: number[];
 
   @ApiPropertyOptional({
-    type: 'array',
+    type: 'string',
     required: false,
     items: {
       type: 'object',
       properties: {
-        key: {
-          type: 'string',
-          description: 'Meta key of the blog post.',
-          example: 'author',
+        metaValue: {
+          type: 'json',
+          description: 'The meta Value is JSON string',
+          example: '{"sidebarEnabled": true}',
         },
         value: {
           type: 'any',
-          description: 'Meta value of the blog post.',
-          example: 'John Doe',
+          description: 'Any value that you want to save for the key.',
+          example: true,
         },
       },
-      required: ['key', 'value'],
     },
-    description: 'Metadata options for the blog post.',
   })
   @IsOptional()
-  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => CreatePostMetaOptionsDto)
-  metaOptions?: CreatePostMetaOptionsDto[];
+  metaOptions?: CreatePostMetaOptionsDto | null;
+
+  @ApiProperty({
+    type: 'integer',
+    description: 'Author ID',
+    required: true,
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  authorId: number;
 }

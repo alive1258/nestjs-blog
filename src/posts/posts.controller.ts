@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PostsService } from './providers/posts.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dtos';
@@ -14,12 +24,16 @@ export class PostsController {
     private readonly postsService: PostsService, // inject PostsService
   ) {}
 
+  @Get()
+  public getAllPosts() {
+    return this.postsService.finAll();
+  }
   /**
    * Create a new post
    */
   @Get('/:userId')
   public getPosts(@Param('userId') userId: string) {
-    return this.postsService.finAll(userId); // call the finAll method from PostsService with userId parameter
+    return this.postsService.finOne(userId); // call the finAll method from PostsService with userId parameter
   }
 
   @ApiOperation({
@@ -32,7 +46,7 @@ export class PostsController {
   })
   @Post()
   public createPost(@Body() createPostDto: CreatePostDto) {
-    console.log(createPostDto);
+    return this.postsService.create(createPostDto);
   }
 
   @ApiOperation({
@@ -45,7 +59,12 @@ export class PostsController {
   })
   @Patch()
   public updatePost(@Body() patchPostDto: PatchPostDto) {
-    console.log(patchPostDto);
-    return `You sent a patch request to posts endpoint ${patchPostDto}`;
+    return this.postsService.update(patchPostDto);
+  }
+
+  // delete
+  @Delete()
+  public deletePost(@Query('id', ParseIntPipe) id: number) {
+    return this.postsService.delete(id);
   }
 }
