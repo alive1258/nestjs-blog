@@ -1,4 +1,9 @@
-import { Body, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Injectable,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/providers/user.service';
 import { CreatePostDto } from '../dtos/create-post.dtos';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,7 +23,6 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
 
     // inject meta options repository
-
     @InjectRepository(MetaOption)
     private readonly metaOptionRepository: Repository<MetaOption>,
 
@@ -28,8 +32,8 @@ export class PostsService {
   public async create(@Body() createPostDto: CreatePostDto) {
     // Find author from database based on authorId
     const author = await this.usersService.findOneById(createPostDto.authorId);
+
     // find tags
-    // const tags = await this.tagsService.findMultipleTags(createPostDto.tags);
     const tags = createPostDto.tags
       ? await this.tagsService.findMultipleTags(createPostDto.tags)
       : [];
@@ -40,7 +44,7 @@ export class PostsService {
 
     let metaOptions = createPostDto.metaOptions
       ? this.metaOptionRepository.create(createPostDto.metaOptions)
-      : undefined; // Change null to undefined for type compatibility
+      : undefined;
 
     if (metaOptions) {
       metaOptions = await this.metaOptionRepository.save(metaOptions);
@@ -63,7 +67,6 @@ export class PostsService {
 
   public async finAll() {
     // logic to fetch posts for a given user
-
     let posts = await this.postRepository.find({
       relations: {
         metaOptions: true,
@@ -73,30 +76,52 @@ export class PostsService {
     });
     return posts;
   }
+
   public async finOne(userId: string) {
     // logic to fetch posts for a given user
-
     let posts = await this.postRepository.find();
     return posts;
   }
 
   public async update(patchPostDto: PatchPostDto) {
-    // find ths tags
-    // let tags = await this.tagsService.findMultipleTags(patchPostDto.tags);
-    let tags = patchPostDto.tags
-      ? await this.tagsService.findMultipleTags(patchPostDto.tags)
-      : [];
+    // declare the tags and post variables
+    let tags: any[] = [];
+    let post: Post | null;
+
+    try {
+      tags = patchPostDto?.tags
+        ? await this.tagsService.findMultipleTags(patchPostDto.tags)
+        : [];
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to connect to the database. Please try again later.',
+      );
+    }
+
+    // number of tags need to be equal
+    if (!tags || tags.length !== patchPostDto?.tags?.length) {
+      throw new BadRequestException(
+        'Please check your tags IDs and ensure they are correct',
+      );
+    }
 
     // find the post
-    let post = await this.postRepository.findOneBy({ id: patchPostDto.id });
+    try {
+      post = await this.postRepository.findOneBy({ id: patchPostDto.id });
+    } catch (error) {
+      throw new BadRequestException(
+        'Unable to connect to the database. Please try again later.',
+      );
+    }
+
+    // check if post is null
+    if (!post) {
+      throw new BadRequestException('The Post ID does not exist');
+    }
 
     // update the post
-
-    if (!post) {
-      throw new Error(`Post with id ${patchPostDto.id} not found`);
-    }
     post.title = patchPostDto.title ?? post.title;
-    // post.content = patchPostDto.content ?? post.content;
+    post.content = patchPostDto.content ?? post.content;
     post.content =
       patchPostDto.content !== undefined ? patchPostDto.content : post.content;
 
@@ -109,11 +134,18 @@ export class PostsService {
       ? new Date(patchPostDto.publishedOn)
       : post.publishedOn;
 
-    //assign the new tags
+    // assign the new tags
     post.tags = tags;
 
     // save the updated post and return
-    return await this.postRepository.save(post);
+    try {
+      await this.postRepository.save(post);
+    } catch (error) {
+      throw new BadRequestException(
+        'Unable to connect to the database. Please try again later.',
+      );
+    }
+    return post;
   }
 
   // delete

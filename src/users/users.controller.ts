@@ -18,16 +18,14 @@ import { GetUsersParamsDto } from './dtos/get-users-params.dto';
 import { PatchUserDto } from './dtos/patch-user.dto';
 import { UsersService } from './providers/user.service';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateManyUsersDto } from './dtos/create-many-users.dto';
 
 @Controller('users')
 @ApiTags('Users')
 export class UsersController {
-  constructor(
-    //inject Users Service
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  @Get('/:id')
+  @Get()
   @ApiOperation({
     summary: 'Fetches a list of registered users on the application',
   })
@@ -38,15 +36,14 @@ export class UsersController {
   @ApiQuery({
     name: 'limit',
     type: 'number',
-    description: 'The  number of entries returned per query',
+    description: 'The number of entries returned per query',
     required: false,
     example: 10,
   })
   @ApiQuery({
     name: 'page',
     type: 'number',
-    description:
-      'The  position of the number that you want to the API to return',
+    description: 'The page number of the results',
     required: false,
     example: 1,
   })
@@ -58,9 +55,19 @@ export class UsersController {
     return this.usersService.findAll(getUsersParamsDto, limit, page);
   }
 
+  @Get('/:id') // ✅ Correct, now properly used for fetching a single user by ID
+  public getUserById(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOneById(id);
+  }
+
   @Post()
   public createUsers(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
+  }
+
+  @Post('create-many')
+  public createManyUsers(@Body() createManyUsersDto: CreateManyUsersDto) {
+    return this.usersService.createMany(createManyUsersDto);
   }
 
   @Patch()

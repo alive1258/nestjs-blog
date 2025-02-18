@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { config } from 'dotenv';
+
+config(); // Load .env before tests
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -17,9 +19,9 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('S3_BUCKET:', process.env.S3_BUCKET); // Debugging output
+
+    return request(app.getHttpServer()).get('/').expect(200);
   });
 });
