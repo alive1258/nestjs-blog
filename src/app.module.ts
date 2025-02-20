@@ -21,6 +21,7 @@ const ENV = process.env.NODE_ENV;
 @Module({
   imports: [
     UsersModule,
+
     PostsModule,
     AuthModule,
     ConfigModule.forRoot({

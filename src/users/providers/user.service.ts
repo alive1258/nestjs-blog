@@ -7,15 +7,17 @@ import {
   RequestTimeoutException,
 } from '@nestjs/common';
 import { GetUsersParamsDto } from '../dtos/get-users-params.dto';
-import { DataSource, Repository } from 'typeorm';
-import { User } from '../user.entity';
+import { Repository } from 'typeorm';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { ConfigType } from '@nestjs/config';
 import profileConfig from '../config/profile.config';
-import { error } from 'console';
 import { UsersCreateManyProvider } from './users-create-many.provider';
 import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
+import { User } from '../user.entity';
+import { CreateUserProvider } from './create-user.provider';
+import { FindOneUserByEmailProvider } from './find-one-user-by-email.provider';
 
 @Injectable()
 export class UsersService {
@@ -26,52 +28,17 @@ export class UsersService {
     @Inject(profileConfig.KEY)
     private readonly profileConfiguration: ConfigType<typeof profileConfig>,
 
-    // inject datasource
-    // private readonly dataSource: DataSource,
     //inject useCreatManayProvider
     private readonly usersCreateManyProvider: UsersCreateManyProvider,
+    //inject createUserProvider
+    private readonly createUserProvider: CreateUserProvider,
+
+    //inject findOneByEmailProvider
+    private readonly findOneByEmailProvider: FindOneUserByEmailProvider,
   ) {}
 
   public async createUser(createUserDto: CreateUserDto) {
-    let existingUser = undefined as User | null | undefined;
-
-    // check if user already exists
-    try {
-      existingUser = await this.userRepository.findOne({
-        where: { email: createUserDto.email },
-      });
-    } catch (error) {
-      console.log(error);
-      throw new RequestTimeoutException(
-        `We are currently experiencing a temporary issue processing your request. Please try again later.`,
-        {
-          description: `Request timed out while verifying the existence of a user with email ${createUserDto.email}. This may be due to a network issue or server delay.`,
-        },
-      );
-    }
-
-    // Handle exception if user already exists
-    if (existingUser) {
-      throw new BadRequestException(
-        `A user with the email ${createUserDto.email} already exists. Please use a different email or log in.`,
-      );
-    }
-
-    // create user
-    let newUser = this.userRepository.create(createUserDto);
-    try {
-      newUser = await this.userRepository.save(newUser);
-    } catch (error) {
-      throw new RequestTimeoutException(
-        `We are currently experiencing a temporary issue processing your request. Please try again later.`,
-        {
-          description:
-            'Error connecting to the Database. Please try again later',
-        },
-      );
-    }
-
-    return newUser;
+    return await this.createUserProvider.createUser(createUserDto);
   }
 
   public findAll(
@@ -118,5 +85,9 @@ export class UsersService {
 
   public async createMany(createManyUsersDto: CreateManyUsersDto) {
     return await this.usersCreateManyProvider.createMany(createManyUsersDto);
+  }
+
+  public async findOneByEmail(email: string) {
+    return await this.findOneByEmailProvider.findOneByEmail(email);
   }
 }

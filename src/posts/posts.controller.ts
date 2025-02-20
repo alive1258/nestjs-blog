@@ -13,6 +13,7 @@ import { PostsService } from './providers/posts.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dtos';
 import { PatchPostDto } from './dtos/patch-post.dto';
+import { GetPostsDto } from './dtos/get-post.dto';
 
 @Controller('posts')
 /**
@@ -25,15 +26,15 @@ export class PostsController {
   ) {}
 
   @Get()
-  public getAllPosts() {
-    return this.postsService.finAll();
+  public getAllPosts(@Query() postQuery: GetPostsDto) {
+    return this.postsService.finAll(postQuery);
   }
   /**
    * Create a new post
    */
   @Get('/:userId')
   public getPosts(@Param('userId') userId: string) {
-    return this.postsService.finOne(userId); // call the finAll method from PostsService with userId parameter
+    return this.postsService.finOne(userId);
   }
 
   @ApiOperation({
@@ -61,7 +62,6 @@ export class PostsController {
   public updatePost(@Body() patchPostDto: PatchPostDto) {
     return this.postsService.update(patchPostDto);
   }
-
   // delete
   @Delete()
   public deletePost(@Query('id', ParseIntPipe) id: number) {
