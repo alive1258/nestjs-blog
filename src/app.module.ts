@@ -13,6 +13,12 @@ import appConfig from './config/app.config';
 import profileConfig from './users/config/profile.config';
 import databaseConfig from './config/database.config';
 import environmentValidation from './config/environment.validation';
+import jwtConfig from './auth/config/jwt.config';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { AccessTokenGuard } from './auth/guard/access-token/access-token.guard';
+import { AuthenticationGuard } from './auth/gaurds/authentication/authentication.guard';
+import { DataResponseInterceptor } from './common/interceptors/data-response/data-response.interceptor';
 
 // use created modules here
 
@@ -44,10 +50,24 @@ const ENV = process.env.NODE_ENV;
         synchronize: ConfigService.get('database.synchronize'),
       }),
     }),
+    ConfigModule.forFeature(jwtConfig),
+    JwtModule.registerAsync(jwtConfig.asProvider()),
     TagsModule,
     MetaOptionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+
+    {
+      provide: APP_GUARD,
+      useClass: AccessTokenGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DataResponseInterceptor,
+    },
+    AccessTokenGuard,
+  ],
 })
 export class AppModule {}

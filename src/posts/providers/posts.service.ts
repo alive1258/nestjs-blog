@@ -15,6 +15,9 @@ import { TagsService } from 'src/tags/providers/tags.service';
 import { GetPostsDto } from '../dtos/get-post.dto';
 import { PaginationProvider } from 'src/common/pagination/providers/pagination.service';
 import { Paginated } from 'src/common/pagination/interface/paginated.interface';
+import { CreatePostProvider } from './create-post.provider';
+import { ActiveUserData } from 'src/auth/interface/active-user-data.interface';
+import { Tag } from 'src/tags/tag.entity';
 
 @Injectable()
 export class PostsService {
@@ -33,42 +36,17 @@ export class PostsService {
 
     //pagination provider
     private readonly paginationProvider: PaginationProvider,
+
+    // inject createPostProvider
+    private readonly createPostProvider: CreatePostProvider,
   ) {}
 
-  public async create(@Body() createPostDto: CreatePostDto) {
-    // Find author from database based on authorId
-    const author = await this.usersService.findOneById(createPostDto.authorId);
-
-    // find tags
-    const tags = createPostDto.tags
-      ? await this.tagsService.findMultipleTags(createPostDto.tags)
-      : [];
-
-    if (!author) {
-      throw new Error('Author not found'); // Handle case where author is not found
-    }
-
-    let metaOptions = createPostDto.metaOptions
-      ? this.metaOptionRepository.create(createPostDto.metaOptions)
-      : undefined;
-
-    if (metaOptions) {
-      metaOptions = await this.metaOptionRepository.save(metaOptions);
-    }
-
-    const { metaOptions: opMt, ...postDto } = createPostDto;
-
-    let post = this.postRepository.create({
-      ...postDto,
-      author,
-      tags: tags,
-    });
-
-    if (metaOptions) {
-      post.metaOptions = metaOptions;
-    }
-
-    return await this.postRepository.save(post);
+  public async create(
+    @Body() createPostDto: CreatePostDto,
+    user: ActiveUserData,
+  ) {
+    // return this.postsService.create(createPostDto, user);
+    return await this.createPostProvider.create(createPostDto, user);
   }
 
   public async finAll(postQuery: GetPostsDto): Promise<Paginated<Post>> {
@@ -92,7 +70,7 @@ export class PostsService {
 
   public async update(patchPostDto: PatchPostDto) {
     // declare the tags and post variables
-    let tags: any[] = [];
+    let tags: Tag[] | undefined = [];
     let post: Post | null;
 
     try {
